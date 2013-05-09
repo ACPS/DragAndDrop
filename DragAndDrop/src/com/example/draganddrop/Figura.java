@@ -1,5 +1,7 @@
 package com.example.draganddrop;
 
+import com.example.draganddrop.controller.MainController;
+
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -23,6 +25,7 @@ public class Figura implements OnTouchListener{
 	private int drawable;
 	private TextView text;
 	private int grade;
+	
 	
 	public Figura(ImageView v, int drawable, TextView text){
 		this.selected=false;
@@ -87,9 +90,39 @@ public class Figura implements OnTouchListener{
 				case MotionEvent.ACTION_DOWN:
 					// Recogemos los parametros de la imagen que hemo tocado
 					
-					if(!this.selected){
+					MainController.getInstance().disabledFiguras();
 						RelativeLayout.LayoutParams Params = (RelativeLayout.LayoutParams) view
 								.getLayoutParams();
+						
+						
+						
+						if(MainController.getInstance().getActual()==-1){
+							Log.i("Touch", "Aqui");
+							if(this.selected){
+								this.selected=false;
+								MainController.getInstance().setActual(-1);
+								MainController.getInstance().getSeekBar().setEnabled(false);
+							}else{
+								this.selected=true;
+								MainController.getInstance().updateActual();
+								MainController.getInstance().getSeekBar().setEnabled(true);
+							}
+						}else{
+							MainController.getInstance().getFiguras().get(MainController.getInstance().getActual()).setSelected(false);
+							Log.i("Igual", MainController.getInstance().getFiguras().get(MainController.getInstance().getActual()).equals(this)+"");
+							if(MainController.getInstance().getFiguras().get(MainController.getInstance().getActual()).equals(this)){
+									this.selected=false;
+									MainController.getInstance().setActual(-1);
+									MainController.getInstance().getSeekBar().setEnabled(false);
+								
+								
+							}else{
+								this.selected=true;
+								MainController.getInstance().updateActual();
+								MainController.getInstance().getSeekBar().setEnabled(true);
+							}
+							
+						}
 						
 						
 						this.xDelta = X - Params.leftMargin;
@@ -97,10 +130,9 @@ public class Figura implements OnTouchListener{
 						
 						
 						text.setText("Seleccionado "+drawable);
-						this.selected=true;
-					}else{
-						this.selected=false;
-					}
+						
+						MainController.getInstance().updateSeekBar();
+					
 					break;
 				case MotionEvent.ACTION_UP:
 					// Al levantar el dedo simplemento mostramos un mensaje

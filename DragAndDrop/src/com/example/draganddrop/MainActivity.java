@@ -1,8 +1,5 @@
 package com.example.draganddrop;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -14,6 +11,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
@@ -21,6 +21,8 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.draganddrop.controller.MainController;
 
 @SuppressLint("NewApi")
 public class MainActivity extends Activity implements OnTouchListener {
@@ -37,11 +39,17 @@ public class MainActivity extends Activity implements OnTouchListener {
 	Matrix matrix = new Matrix();
 	private int rotate=0;
 	private ImageView objeto2;
-	private List<Figura> figuras= new LinkedList<Figura>();
+
+	PaintView paintView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		paintView = new PaintView(this);
+		//setContentView(paintView);
+		paintView.requestFocus();
+		
 		setContentView(R.layout.activity_main);
 		// Relacionamos
 		marco = (ViewGroup) findViewById(R.id.marco);
@@ -71,11 +79,27 @@ public class MainActivity extends Activity implements OnTouchListener {
 		imagen.setScaleType(ScaleType.CENTER);
 		
 		marco.addView(imagen);
+		marco.addView(paintView);
 		
 		barra = (SeekBar) findViewById(R.id.bar);
 		
-		figuras.add(new Figura(imagen,R.drawable.google, (TextView)findViewById(R.id.selected)));
-		figuras.add(new Figura(objeto2,R.drawable.ic_launcher,(TextView)findViewById(R.id.selected)));
+		MainController.getInstance();
+		MainController.getInstance().setSeekBar(barra);
+		
+		imagen.setPivotX(imagen.getWidth()/2);
+		imagen.setPivotY(imagen.getHeight()/2);
+		imagen.setRotation(45);
+
+		objeto2.setPivotX(objeto2.getWidth()/2);
+		objeto2.setPivotY(objeto2.getHeight()/2);
+		objeto2.setRotation(45);
+		
+		MainController.getInstance().addFigura(new Figura(imagen,R.drawable.google, (TextView)findViewById(R.id.selected)));
+		MainController.getInstance().addFigura(new Figura(objeto2,R.drawable.ic_launcher,(TextView)findViewById(R.id.selected)));
+		
+		
+		
+		
 		
 		barra.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
@@ -110,13 +134,13 @@ public class MainActivity extends Activity implements OnTouchListener {
 				// Bitmap rotatedBitmap = Bitmap.createBitmap(original, 0, 0,
 				// original.getWidth(), original.getHeight(), matrix, true);
 				//
-				Figura f = getFigura();
+				Figura f = MainController.getInstance().getFigura();
 				Log.i("figura",f.getDrawable()+"");
-				
+				f.setGrade(progress);
 				Bitmap original = BitmapFactory.decodeResource(getResources(),
 						f.getDrawable());
 				
-				matrix.postRotate(progress - rotate, f.getView().getWidth()/2,f.getView().getHeight()/2);
+				matrix.postRotate(progress - rotate, 0,0);
 				rotate = progress;
 				
 				Bitmap rotatedBitmap = Bitmap.createBitmap(original, 0, 0,
@@ -201,22 +225,24 @@ public class MainActivity extends Activity implements OnTouchListener {
 		matrixMirror.setValues(mirrorY);
 		matrix.postConcat(matrixMirror);
 		
+		Figura f =MainController.getInstance().getFigura();
 		Bitmap original = BitmapFactory.decodeResource(getResources(),
-				R.drawable.google);
+				f.getDrawable());
 		Bitmap rotatedBitmap = Bitmap.createBitmap(original, 0, 0,
 				original.getWidth(), original.getHeight(), matrix, true);
 		original.recycle();
 
-		imagen.setImageBitmap(rotatedBitmap);
+		f.setBitMap(rotatedBitmap);
+		
+//		RotateAnimation rotateAnimation = new RotateAnimation(30,90,
+//				Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+//				0.5f);
+//
+//			rotateAnimation.setInterpolator(new LinearInterpolator());
+//			rotateAnimation.setDuration(5000);
+//			rotateAnimation.setFillAfter(true);
+//			objeto2.startAnimation(rotateAnimation);
 	}
 
-	public Figura getFigura(){
-		Figura figura= new Figura();
-		for(Figura f: figuras){
-			if(f.isSelected()){
-				figura=f;
-			}
-		}
-		return figura;
-	}
+	
 }
